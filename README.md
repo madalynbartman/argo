@@ -1,2 +1,2 @@
-# Argo
+# argo
 Practice with Argo Workflows
