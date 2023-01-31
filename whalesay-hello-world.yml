@@ -1,16 +1,16 @@
 apiVersion argoproj.io/v1alpha1
-kind: Workflow     #new type of k8s spec
+kind: Workflow  
 metadata:
-  generateName: helloworld- #name of the workflow spec
+  generateName: helloworld- 
 spec
-  entrypoint: whalesay #invoke the whalesay teplate
+  entrypoint: whalesay 
   templates
-    - name: whalesay #name of the template
+    - name: whalesay 
       container 
         image: docker/whalesay
         command: [ "hello world" ]
         args: [ "hello world" ]
-        resources: # limit the resources
+        resources: 
           limits:
             memory: 32Mi
             cpu: 100m
