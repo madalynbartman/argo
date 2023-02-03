@@ -1,0 +1,1 @@
+k -n argo create -f hello-wold.yaml
