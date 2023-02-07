@@ -1,0 +1,10 @@
+k create ns argo
+k apply -n argo -f quick-start-postgres.yaml   (in installation folder)
+k -n argo port-forward deployment/argo-server 2746:2746
+
+then kick off the workflows if you want 
+k -n argo create -f hello-world.yaml
+k -n argo create -f container-template.yaml 
+k -n argo create -f script-template.yaml
+k -n argo create -f resource-template.yaml
+etc
