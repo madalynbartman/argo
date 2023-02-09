@@ -9,3 +9,6 @@ k -n argo create -f container-template.yaml
 k -n argo create -f script-template.yaml
 k -n argo create -f resource-template.yaml
 etc
+
+install argo wf in the argo ns
+kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo-workflows/master/manifests/quick-start-postgres.yaml
