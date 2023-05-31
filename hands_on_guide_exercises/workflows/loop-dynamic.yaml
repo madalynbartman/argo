@@ -1,0 +1,63 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: wf-loop-dynamic
+spec:
+  entrypoint: dag-template
+  arguments:
+    parameters:
+    - name: message1
+      value: Task 1 is executed 
+
+    - name: ingest-list
+      value: |
+        [
+          { "extractor": "PythonExtractor", "table":" "Table 1" }, 
+          { "extractor": "PySparkExtractor", "table:" "Table 2" },
+          { "extractor": "DaskExtractor", "table:" "Table 3" }
+        ]
+  templates:
+  - name: dag-template-two
+    inputs:
+      parameters:
+      - name: message1
+
+    dag:
+      tasks:
+      - name: Task1
+        arguments:
+          parameters: [{name: text, value: "{{inputs.parameters.message1}}"}]
+        template: task-template
+      - name: Task2
+        tempalte: task-generate-list
+      - name: Task3
+        dependencies: [Task2] # task 2 and 3 will be executed in parallel to match the steps template
+        template: task-template
+        arguments:
+          parameters:
+          - name: extractor
+            value: "{{item.extractor}}"
+          - name: table
+            value: "{{item.table}}"
+        withParam: "{(tasks.Task2.outputs.result)}"        
+       
+    - name: task-generate-list
+      script:
+        image: python:3.8-slim
+        command: [python]
+        source: |
+          import josn
+          import sys
+          list - [("PythonExtractor", "Table 1"), ("PySparkExtractor", "Table 2"), ("DaskExtractor", "Table 3")]
+          json.dump([("extractor": i[0], "table": i[1]) for i in list], sys.stdout)
+
+    - name: task-loop-set
+      inputs: 
+        paramets:
+        - name: extractor
+        - name: table
+      script:
+        image: python:3.8-slim
+        command: [python]
+        source: |
+          print("Applying ", "{{inputs.parameters.extractor}}", "to the table ", "{{inputs.parameters.table1}}")
