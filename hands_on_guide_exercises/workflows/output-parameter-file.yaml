@@ -1,0 +1,65 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: wf-output-parameter-file
+spec:
+  entrypoint: dag-template
+  arguments:
+    parameters:
+    - name: message1
+      value: Task 1 is executed 
+    - name: message2
+      value: Task 2 is executed 
+  templates:
+  - name: dag-template-two
+    inputs:
+      parameters:
+      - name: message1
+      - name: message2
+      - name: message3
+      - name: message4
+    dag:
+      tasks:
+      - name: Task1
+        arguments:
+          parameters: [{name: text, value: "{{inputs.parameters.message1}}"}]
+        template: task-template
+      - name: Task2
+        arguments:
+          parameters: [{name: text, value: "{{inputs.parameters.message2}}"}]
+        template: task-template # task 2 will start after task 1 
+      - name: Task3
+        arguments:
+          parameters: [{name: text, value: "{{inputs.parameters.message3}}"}]
+        template: task-template
+        dependencies: [Task1] # task 2 and 3 will be executed in parallel to match the steps template
+      - name: Task4
+        arguments:
+          parameters: [{name: text, value: "{{tasks.task3.outputs.parameters.task-param}"}]
+        template: task-template
+        dependencies: [Task2, Task3] # will be executed last. Its a graph so you have to define the dependencies not the steps 
+
+  - name: task-template-two
+    inputs: 
+      paramets:
+      - name: text
+    script:
+      image: python:3.8-slim
+      command: [python]
+    source: |
+      p = "{{inputs.parameters.text}}"
+      print(p)
+
+  - name: task-output
+    script:
+      image: node:9.1-alpine
+      command: [node]
+      source: \
+        var par = "Whatever parameters are written to the file":
+        const fs = require('fs')
+        fs.writeFile("/tmp/output-params.txt, par)
+    outputs: 
+      parameters:
+      - name: task-param
+        valueFrom: 
+          path: /tmp/output-params.txt

@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: wf-loop-sets-inputparam
+spec:
+  entrypoint: dag-template
+  arguments:
+    parameters:
+    - name: message1
+      value: Task 1 is executed 
+    - name: message2
+      value: Task 2 is executed 
+    - name: ingest-list
+      value: |
+        [
+          { "extractor": "PythonExtractor", "table":" "Table 1" }, 
+          { "extractor": "PySparkExtractor", "table:" "Table 2" },
+          { "extractor": "DaskExtractor", "table:" "Table 3" }
+        ]
+  templates:
+  - name: dag-template-two
+    inputs:
+      parameters:
+      - name: message1
+      - name: message2
+      - name: message3
+      - name: message4
+    dag:
+      tasks:
+      - name: Task1
+        arguments:
+          parameters: [{name: text, value: "{{inputs.parameters.message1}}"}]
+        template: task-template
+      - name: Task2
+        arguments:
+          parameters: [{name: text, value: "{{inputs.parameters.message2}}"}]
+      - name: Task3
+        arguments:
+          parameters: [{name: text, value: "{{inputs.parameters.message3}}"}]
+        dependencies: [Task1] # task 2 and 3 will be executed in parallel to match the steps template
+        template: task-template
+        arguments:
+          parameters:
+          - name: extractor
+            value: "{{item.extractor}}"
+          - name: table
+            value: "{{item.table}}"
+        withParam: "{(inputs.parameters.ingest-list)}"        
+       
+    - name: task-template
+      inputs: 
+        paramets:
+        - name: text
+      script:
+        image: python:3.8-slim
+        command: [python]
+        source: |
+          p = "{{inputs.parameters.text"
+          print(p)
+
+    - name: task-loop-set
+      inputs: 
+        paramets:
+        - name: extractor
+        - name: table
+      script:
+        image: python:3.8-slim
+        command: [python]
+        source: |
+          print("Applying ", "{{inputs.parameters.extractor}}", "to the table ", "{{inputs.parameters.table1}}")
