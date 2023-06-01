@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: cronwf-dag
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: "Forbid"
+  startingDeadlineseconds: 70
+  workflowSpec:
+    entrypoint: dag-template
+    templates:
+    - name: dag-template
+      dag:
+        tasks:
+        - name: Task1
+          template: task-template
+        - name: Task2
+          template: task-template # task 2 will start after task 1 
+        - name: Task3
+          template: task-template
+          dependencies: [Task1] # task 2 and 3 will be executed in parallel to match the steps template
+        - name: Task4
+          template: task-template
+          dependencies: [Task2, Task3] # will be executed last. Its a graph so you have to define the dependencies not the steps 
+
+    - name: task-template
+      script:
+        image: python:3.8-slim
+        command: [python]
+        source: |
+          print("Task executed.")
