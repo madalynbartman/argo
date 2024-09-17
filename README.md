@@ -1,6 +1,6 @@
 # argo
 
-The gke directory holds my most recent project to deployt a Google Kubernetes Engine (GKE) with Terraform Cloud.
+The gke directory holds my most recent project to deploy a Google Kubernetes Engine (GKE) using Terraform Cloud.
 
 The hands_on_guide directory holds install instructions and general notes.
 
