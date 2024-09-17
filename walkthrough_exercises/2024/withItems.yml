@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: loops-
+spec:
+  entrypoint: loop-example
+  templates:
+  - name: loop-example
+    steps:
+    - - name: print-message
+        template: whalesay
+        arguments:
+          parameters:
+          - name: message
+            value: "{{item}}"
+        withItems:              # invoke whalesay once for each item in parallel
+        - hello world           # item 1
+        - goodbye world         # item 2
+
+  - name: whalesay
+    inputs:
+      parameters:
+      - name: message
+    container:
+      image: docker/whalesay:latest
+      command: [cowsay]
+      args: ["{{inputs.parameters.message}}"]
+
+# Notes:
+# withItems takes a list of things to work on. Either
+# plain, single values, which are then usable in your template as '{{item}}'
+# a JSON object where each element in the object can be addressed by it's key as '{{item.key}}
+
+# This ex iterates over a list of items with withItems, substituting a string for each instantiated template.
